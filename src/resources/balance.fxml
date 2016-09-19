@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXComboBox?>
+<?import com.jfoenix.controls.JFXDatePicker?>
+<?import com.jfoenix.controls.JFXRadioButton?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="741.0" prefWidth="663.0" style="-fx-background-color: #fefefe;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.BalanceController">
+    <children>
+        <BorderPane fx:id="content" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <left>
+                <VBox prefHeight="706.0" prefWidth="370.0" BorderPane.alignment="CENTER">
+                    <children>
+                        <GridPane layoutX="15.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="400.0">
+                            <children>
+                                <Label text="Invoice">
+                                    <font>
+                                        <Font name="Calibri Bold" size="16.0" />
+                                    </font>
+                                </Label>
+                                <JFXTextField fx:id="invoiceFilterFrom" promptText="From" GridPane.columnIndex="1">
+                                    <font>
+                                        <Font name="Calibri" size="16.0" />
+                                    </font>
+                                </JFXTextField>
+                                <Label text="Date" GridPane.rowIndex="1">
+                                    <font>
+                                        <Font name="Calibri Bold" size="16.0" />
+                                    </font>
+                                </Label>
+                                <Label text="Customer" GridPane.rowIndex="2">
+                                    <font>
+                                        <Font name="Calibri Bold" size="16.0" />
+                                    </font>
+                                </Label>
+                                <JFXTextField fx:id="invoiceFilterTo" promptText="To" GridPane.columnIndex="2">
+                                    <font>
+                                        <Font name="Calibri" size="16.0" />
+                                    </font>
+                                </JFXTextField>
+                                <JFXComboBox fx:id="nameFilter" promptText="Select Customer" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2">
+                           <GridPane.margin>
+                              <Insets />
+                           </GridPane.margin></JFXComboBox>
+                                <JFXDatePicker fx:id="dateFilterFrom" promptText="mm/dd/yyyy" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <GridPane.margin>
+                                        <Insets left="3.0" />
+                                    </GridPane.margin>
+                                </JFXDatePicker>
+                                <JFXDatePicker fx:id="dateFilterTo" promptText="mm/dd/yyyy" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                    <GridPane.margin>
+                                        <Insets left="3" />
+                                    </GridPane.margin>
+                                </JFXDatePicker>
+                                <JFXRadioButton fx:id="radioAll" text="All" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                           <GridPane.margin>
+                              <Insets top="10.0" />
+                           </GridPane.margin></JFXRadioButton>
+                                <JFXRadioButton fx:id="radioPaid" text="Paid" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                           <GridPane.margin>
+                              <Insets top="5.0" />
+                           </GridPane.margin></JFXRadioButton>
+                                <JFXRadioButton fx:id="radioUnpaid" text="Not Paid" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                           <GridPane.margin>
+                              <Insets top="5.0" />
+                           </GridPane.margin></JFXRadioButton>
+                                <JFXButton fx:id="btnTotal" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onAction="#onTotal" style="-fx-background-color: #85a0a8;" text="Total" textAlignment="CENTER" textFill="WHITE" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                    <GridPane.margin>
+                                        <Insets left="2.0" right="2.0" top="20.0" />
+                                    </GridPane.margin>
+                                </JFXButton>
+                                <JFXButton fx:id="btnClear" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onAction="#onClear" style="-fx-background-color: #85a0a8;" text="Clear" textAlignment="CENTER" textFill="WHITE" GridPane.columnIndex="2" GridPane.rowIndex="6">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                    <GridPane.margin>
+                                        <Insets left="2.0" right="2.0" top="20.0" />
+                                    </GridPane.margin>
+                                </JFXButton>
+                        <Label layoutX="10.0" layoutY="101.0" text="Total" GridPane.rowIndex="9">
+                           <font>
+                              <Font name="Calibri Bold" size="16.0" />
+                           </font>
+                           <GridPane.margin>
+                              <Insets top="20.0" />
+                           </GridPane.margin>
+                        </Label>
+                        <Label fx:id="totalLabel" layoutX="10.0" layoutY="301.0" maxWidth="1.7976931348623157E308" textAlignment="RIGHT" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="9">
+                           <font>
+                              <Font name="Calibri Bold" size="24.0" />
+                           </font>
+                           <GridPane.margin>
+                              <Insets top="20.0" />
+                           </GridPane.margin>
+                        </Label>
+                        <JFXButton fx:id="btnPrint" alignment="CENTER" layoutX="92.0" layoutY="265.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onAction="#onPrint" style="-fx-background-color: #85a0a8;" text="Print" textAlignment="CENTER" textFill="WHITE" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="10">
+                           <font>
+                              <Font name="System Bold" size="14.0" />
+                           </font>
+                           <GridPane.margin>
+                              <Insets left="2.0" right="2.0" top="50.0" />
+                           </GridPane.margin>
+                        </JFXButton>
+                            </children>
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="20.0" prefWidth="80.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="40.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="40.0" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints maxHeight="40.0" minHeight="30.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                                <RowConstraints maxHeight="40.0" minHeight="30.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                                <RowConstraints maxHeight="40.0" minHeight="30.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="40.0" minHeight="30.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="40.0" minHeight="30.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="40.0" minHeight="30.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="40.0" minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="40.0" minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="40.0" minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="40.0" minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="40.0" minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                            </rowConstraints>
+                        </GridPane>
+                    </children>
+                    <padding>
+                        <Insets bottom="5.0" left="20.0" right="5.0" />
+                    </padding>
+                </VBox>
+            </left>
+            <top>
+                <Label prefHeight="35.0" prefWidth="335.0" text="Statement of Account" BorderPane.alignment="CENTER_LEFT">
+                    <font>
+                        <Font name="Calibri Bold" size="30.0" />
+                    </font>
+                    <BorderPane.margin>
+                        <Insets left="20.0" top="10.0" />
+                    </BorderPane.margin>
+                </Label>
+            </top>
+         <center>
+                <VBox prefHeight="700.0" prefWidth="250.0" BorderPane.alignment="CENTER">
+                    <children>
+                        <TableView fx:id="balanceTable">
+                            <columns>
+                                <TableColumn fx:id="dateColumn" prefWidth="150.0" text="Date" />
+                                <TableColumn fx:id="invoiceColumn" prefWidth="150.0" text="Invoice" />
+                                <TableColumn fx:id="poColumn" prefWidth="200.0" text="P.O." />
+                                <TableColumn fx:id="amountColumn" prefWidth="200.0" text="Amount" />
+                            </columns>
+                            <opaqueInsets>
+                                <Insets />
+                            </opaqueInsets>
+                        </TableView>
+                    </children>
+                    <BorderPane.margin>
+                        <Insets left="5.0" right="20.0" />
+                    </BorderPane.margin>
+                </VBox>
+         </center>
+        </BorderPane>
+    </children>
+
+</AnchorPane>

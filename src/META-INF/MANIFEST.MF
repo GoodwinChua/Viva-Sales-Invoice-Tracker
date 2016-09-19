@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Class-Path: jfoenix.jar sqlite-jdbc-3.8.11.2.jar
+Main-Class: welcome.Main
+
