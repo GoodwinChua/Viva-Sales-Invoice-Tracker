@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp spec="1.0" xmlns:jfx="http://javafx.com" href="VivaSalesInvoiceTracker.jnlp">
+  <information>
+    <title>Viva Sales Invoice Tracker</title>
+    <vendor>Goodwin Chua</vendor>
+    <description>Simple program to keep track of all invoice entries</description>
+    <offline-allowed/>
+  </information>
+  <resources>
+    <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
+    <jar href="VivaSalesInvoiceTracker.jar" size="71399" download="eager" />
+    <jar href="jfoenix.jar" size="2170154" download="eager" />
+    <jar href="sqlite-jdbc-3.8.11.2.jar" size="5575351" download="eager" />
+  </resources>
+  <jfx:javafx-desc  width="600" height="400" main-class="welcome.Main"  name="VivaSalesInvoiceTracker" />
+  <update check="background"/>
+</jnlp>

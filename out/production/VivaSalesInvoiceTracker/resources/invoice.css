@@ -1,0 +1,39 @@
+.table-view {
+    -fx-table-cell-border-color: transparent;
+    -fx-font: 12px "Verdana";
+    -fx-control-inner-background-alt: -fx-control-inner-background ;
+    -fx-text-fill: #5a5050;
+}
+
+.number-align {
+    -fx-alignment: center-right;
+}
+
+.text-align {
+    -fx-alignment: center-left;
+}
+
+.table-view .column-header {
+    -fx-background-color: #ffffff;
+}
+.table-view .column-header .label{
+    -fx-alignment: center-left;
+    -fx-text-fill: #5a5050;
+    -fx-font: 12px "Tahoma";
+    -fx-font-weight: bold;
+}
+
+.table-view .column-header#money .label{
+    -fx-alignment: center-right;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #fad8c9;
+    -fx-table-cell-border-color: transparent;
+}
+
+#message {
+    -fx-font: 12px "Arial";
+    -fx-text-fill: #5a5050;
+    -fx-font-style: italic;
+}
