@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="VivaSalesInvoiceTracker.jar" size="71399" download="eager" />
+    <jar href="VivaSalesInvoiceTracker.jar" size="188239" download="eager" />
     <jar href="jfoenix.jar" size="2170154" download="eager" />
     <jar href="sqlite-jdbc-3.8.11.2.jar" size="5575351" download="eager" />
   </resources>

@@ -1,5 +1,6 @@
 package utility;
 
+import javafx.css.PseudoClass;
 import javafx.scene.control.TableRow;
 import model.Invoice;
 
@@ -12,6 +13,8 @@ public class InvoiceTableRow extends TableRow<Invoice> {
         super.updateItem(item, empty);
         if ( item == null ) {
             setStyle("");
+        } else if ( item.getPo().equals("Total") ) {
+            setStyle("-fx-font-weight: bold;");
         } else if ( item.isCancelled() ) {
             setStyle("-fx-text-background-color: #3300cc;");
         } else if ( item.isPaid() ) {
@@ -21,5 +24,13 @@ public class InvoiceTableRow extends TableRow<Invoice> {
         } else {
             setStyle("");
         }
+    }
+
+    @Override
+    public void updateIndex(int index) {
+        super.updateIndex(index);
+        PseudoClass lastRow = PseudoClass.getPseudoClass("last-row");
+        pseudoClassStateChanged(lastRow,
+                index >= 0 && index == getTableView().getItems().size() - 1);
     }
 }

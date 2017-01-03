@@ -1,8 +1,25 @@
 .table-view {
-    -fx-table-cell-border-color: transparent;
-    -fx-font: 12px "Verdana";
+    -fx-font: 11px "Arial";
     -fx-control-inner-background-alt: -fx-control-inner-background ;
-    -fx-text-fill: #5a5050;
+    -fx-background-color: transparent;
+}
+
+.table-row-cell:empty {
+    -fx-background-color: white;
+    -fx-table-cell-border-color: white;
+    -fx-border-color: white;
+}
+
+.table-row-cell:empty .table-cell {
+    -fx-border-width: 0px;
+    -fx-table-cell-border-color: white;
+    -fx-border-color: white;
+}
+
+.table-view .column-header,
+.table-view .column-header .filler,
+.table-view .column-header-background .filler {
+    -fx-background-color: white;
 }
 
 .number-align {
@@ -13,27 +30,43 @@
     -fx-alignment: center-left;
 }
 
-.table-view .column-header {
-    -fx-background-color: #ffffff;
+.invoice-align {
+    -fx-alignment: center;
 }
+
+.table-row-cell {
+    -fx-cell-size: 17px;
+    -fx-background-color: white;
+    -fx-table-cell-border-color:  #1F1F1F;
+    -fx-border-color:  #1F1F1F #1F1F1F transparent #1F1F1F ;
+    -fx-border-width: 1;
+}
+
+.table-row-cell:last-row {
+    -fx-border-color:  #1F1F1F;
+}
+
 .table-view .column-header .label{
     -fx-alignment: center-left;
-    -fx-text-fill: #5a5050;
-    -fx-font: 12px "Tahoma";
+    -fx-font: 11px "Arial";
     -fx-font-weight: bold;
 }
+
 
 .table-view .column-header#money .label{
     -fx-alignment: center-right;
 }
 
+.table-view .column-header#invoice .label{
+    -fx-alignment: center;
+}
+
 .table-row-cell:selected {
-    -fx-background-color: #fad8c9;
-    -fx-table-cell-border-color: transparent;
+    -fx-background-color: #f4b794;
+    -fx-table-cell-border-color: #1F1F1F;
 }
 
 #message {
-    -fx-font: 12px "Arial";
-    -fx-text-fill: #5a5050;
+    -fx-font: 11px "Arial";
     -fx-font-style: italic;
 }

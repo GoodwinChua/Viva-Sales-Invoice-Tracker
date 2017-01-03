@@ -23,9 +23,9 @@ public class Invoice {
     public Invoice() {
         this.date = new SimpleObjectProperty<>(LocalDate.now());
         this.invoice = new SimpleIntegerProperty(0);
-        this.customer = new SimpleStringProperty("none");
+        this.customer = new SimpleStringProperty("N/A");
         this.amount = new SimpleDoubleProperty(0);
-        this.po = new SimpleStringProperty("---");
+        this.po = new SimpleStringProperty("");
         this.remarks = new SimpleStringProperty();
         this.isCancelled = new SimpleBooleanProperty(false);
     }
@@ -37,6 +37,13 @@ public class Invoice {
         this.amount = new SimpleDoubleProperty(amount);
         this.po = new SimpleStringProperty(po);
         this.isCancelled = new SimpleBooleanProperty(false);
+    }
+
+    public void toNullInvoice() {
+        this.date = null;
+        this.customer = null;
+        this.invoice = null;
+        this.po = null;
     }
 
     public ObjectProperty<LocalDate> dateProperty(){

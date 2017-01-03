@@ -18,7 +18,6 @@ public class DateTableCell extends TableCell<Invoice, LocalDate> {
         super.updateItem(item, empty);
         if ( item == null || empty ) {
             setText(null);
-            setStyle("");
         } else {
             // Format date.
             setText(myDateFormatter.format(item));

@@ -8,6 +8,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -20,6 +21,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import model.Customer;
+import utility.CustomerToolTipTableCell;
 import utility.MaskField;
 
 import java.net.URL;
@@ -69,37 +71,13 @@ public class CustomerController implements Initializable {
         telColumn.setCellValueFactory(param -> param.getValue().telProperty());
         addressColumn.setCellValueFactory(param -> param.getValue().addressProperty());
 
-        addressColumn.prefWidthProperty().bind(
-                customerTable.widthProperty()
-                        .subtract(nameColumn.widthProperty())
-                        .subtract(telColumn.widthProperty())
-                        .subtract(2)  // a border stroke?
-        );
+        nameColumn.setCellFactory(column -> new CustomerToolTipTableCell());
+        addressColumn.setCellFactory(column -> new CustomerToolTipTableCell());
 
+        telColumn.getStyleClass().add("invoice-align");
+        telColumn.setId("invoice");
 
         btnDelete.setDisable(true);
-
-        nameField.textProperty().addListener((ov, oldValue, newValue) -> {
-            nameField.setText(newValue.toUpperCase());
-            CustomerDAO dao = new CustomerDAO();
-            focusedCustomer = dao.searchCustomer(nameField.getText());
-            if ( focusedCustomer != null ) {
-                nameField.setText(focusedCustomer.getName());
-                if ( focusedCustomer.getTel() != null ) {
-                    telField.setText(focusedCustomer.getTel());
-                }
-                if ( focusedCustomer.getAddress() != null ) {
-                    addressField.setText(focusedCustomer.getAddress());
-                }
-                isEdit = true;
-                btnAdd.setText("Update");
-                btnDelete.setDisable(false);
-            } else {
-                isEdit = false;
-                btnAdd.setText("Add");
-                btnDelete.setDisable(true);
-            }
-        });
 
         addressField.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
             if ( keyEvent.getCode().equals(KeyCode.ENTER) ) {
@@ -202,9 +180,17 @@ public class CustomerController implements Initializable {
         // 5. Add sorted (and filtered) data to the table.
         customerTable.setItems(sortedData);
 
+        PseudoClass lastRow = PseudoClass.getPseudoClass("last-row");
         // 6. Add mouse click listener to table
         customerTable.setRowFactory(tv -> {
-            TableRow<Customer> row = new TableRow<>();
+            TableRow<Customer> row =  new TableRow<Customer>() {
+                @Override
+                public void updateIndex(int index) {
+                    super.updateIndex(index);
+                    pseudoClassStateChanged(lastRow,
+                            index >= 0 && index == customerTable.getItems().size() - 1);
+                }
+            };
             row.setOnMouseClicked(event -> {
                 if ( event.getClickCount() == 1 && (!row.isEmpty()) ) {
                     focusedCustomer = row.getItem();

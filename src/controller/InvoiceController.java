@@ -11,21 +11,27 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.print.*;
+import javafx.print.PageLayout;
+import javafx.print.PageOrientation;
+import javafx.print.Paper;
+import javafx.print.Printer;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Customer;
 import model.FilterBag;
 import model.Invoice;
 import utility.*;
 
-import java.math.BigDecimal;
+import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -34,6 +40,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 /**
  * Created by Goodwin Chua on 8 Sep 2016.
@@ -44,7 +51,7 @@ public class InvoiceController implements Initializable {
     @FXML
     public JFXDatePicker dateFieldForm;
     @FXML
-    public JFXComboBox<Customer> nameFieldForm;
+    public AutoCompleteTextField nameFieldForm;
     @FXML
     public JFXTextField amountFieldForm;
     @FXML
@@ -64,7 +71,7 @@ public class InvoiceController implements Initializable {
     @FXML
     public JFXTextField invoiceFilterTo;
     @FXML
-    public JFXComboBox<Customer> nameFilter;
+    public AutoCompleteTextField nameFilter;
     @FXML
     public JFXTextField amountFilter;
     @FXML
@@ -111,13 +118,14 @@ public class InvoiceController implements Initializable {
     private FilteredList<Invoice> filteredData;
     private SortedList<Invoice> sortedData;
     private ToggleGroup group;
+    private ArrayList<String> customerNames;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        initializeData();
         initializeColumns();
         initializeForm();
         initializeFilter();
-        initializeData();
         refreshTable();
     }
 
@@ -187,6 +195,11 @@ public class InvoiceController implements Initializable {
                 poFieldForm.requestFocus();
             } else if ( event.getSource().equals(poFieldForm) ) {
                 remarksFieldForm.requestFocus();
+            } else if ( event.getSource().equals(remarksFieldForm) ) {
+                btnAdd.requestFocus();
+            } else if ( event.getSource().equals(btnAdd) ) {
+                btnAdd.fire();
+                invoiceFieldForm.requestFocus();
             }
         }
     }
@@ -197,7 +210,7 @@ public class InvoiceController implements Initializable {
         String invoiceTo = invoiceFilterTo.getText();
         LocalDate dateFrom = dateFilterFrom.getValue();
         LocalDate dateTo = dateFilterTo.getValue();
-        String name = nameFilter.getValue().getName();
+        String name = nameFilter.getText();
         String amount = amountFilter.getText();
 
         RadioButton isSelected = (RadioButton) group.getSelectedToggle();
@@ -238,7 +251,7 @@ public class InvoiceController implements Initializable {
         invoiceFilterTo.clear();
         dateFilterFrom.setValue(null);
         dateFilterTo.setValue(null);
-        nameFilter.getSelectionModel().selectLast();
+        nameFilter.setText("");
         amountFilter.clear();
         radioAll.setSelected(true);
     }
@@ -260,20 +273,9 @@ public class InvoiceController implements Initializable {
         });
         remarksColumn.setCellValueFactory(param -> param.getValue().remarksProperty());
 
-        remarksColumn.prefWidthProperty().bind(
-                entryTable.widthProperty()
-                        .subtract(dateColumn.widthProperty())
-                        .subtract(invoiceColumn.widthProperty())
-                        .subtract(nameColumn.widthProperty())
-                        .subtract(poColumn.widthProperty())
-                        .subtract(amountColumn.widthProperty())
-                        .subtract(statusColumn.widthProperty())
-                        .subtract(2)  // a border stroke?
-        );
-
         dateColumn.getStyleClass().add("text-align");
-        invoiceColumn.getStyleClass().add("number-align");
-        invoiceColumn.setId("money");
+        invoiceColumn.getStyleClass().add("invoice-align");
+        invoiceColumn.setId("invoice");
         nameColumn.getStyleClass().add("text-align");
         poColumn.getStyleClass().add("text-align");
         amountColumn.getStyleClass().add("number-align");
@@ -287,6 +289,7 @@ public class InvoiceController implements Initializable {
         nameColumn.setCellFactory(column -> new ToolTipTableCell());
         poColumn.setCellFactory(column -> new ToolTipTableCell());
 
+        entryTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
     private void initializeFilter() {
@@ -300,23 +303,23 @@ public class InvoiceController implements Initializable {
         invoiceFilterFrom.textProperty().addListener(new InvoiceChangeListener(invoiceFilterFrom));
         invoiceFilterTo.textProperty().addListener(new InvoiceChangeListener(invoiceFilterTo));
 
-        nameFilter.setConverter(new CustomerStringConverter());
-        ArrayList<Customer> customers = new CustomerDAO().queryCustomers();
-        customers.add(new Customer("None", "", ""));
-        nameFilter.setItems(FXCollections.observableArrayList(customers));
-        nameFilter.setStyle("-fx-font: 12px Calibri; -fx-padding: 5 11 5 10");
-        nameFilter.getSelectionModel().selectLast();
+        nameFilter.setStyle("-fx-font: 11px Arial;");
+        nameFilter.getEntries().addAll(customerNames);
 
         amountFilter.setTextFormatter(new TextFormatter<>(new AmountFormatter()));
+    }
+
+    private void generateCustomerNames() {
+        customerNames = new ArrayList<>();
+        ArrayList<Customer> customers = new CustomerDAO().queryCustomers();
+        customerNames.addAll(customers.stream().map(Customer::getName).collect(Collectors.toList()));
     }
 
     private void initializeForm() {
         invoiceFieldForm.textProperty().addListener(new InvoiceChangeListener(invoiceFieldForm));
         amountFieldForm.setTextFormatter(new TextFormatter<>(new AmountFormatter()));
-
-        nameFieldForm.setConverter(new CustomerStringConverter());
-        nameFieldForm.setItems(FXCollections.observableArrayList(new CustomerDAO().queryCustomers()));
-        nameFieldForm.setStyle("-fx-font: 12px Calibri; -fx-padding: 5 11 5 10");
+        nameFieldForm.setStyle("-fx-font: 11px Arial;");
+        nameFieldForm.getEntries().addAll(customerNames);
 
         btnOut.setDisable(true);
         btnCancel.setDisable(true);
@@ -346,12 +349,12 @@ public class InvoiceController implements Initializable {
             row.setOnMouseClicked(event -> {
                 if ( event.getClickCount() == 1 && (!row.isEmpty()) ) {
                     Invoice selected = row.getItem();
+                    evaluateInvoice(selected);
                     invoiceFieldForm.setText(selected.getInvoice() + "");
                     dateFieldForm.setValue(selected.getDate());
                     NumberFormat amountFormat = new DecimalFormat("#.00");
                     amountFieldForm.setText(amountFormat.format(selected.getAmount()));
-                    Customer customer = new CustomerDAO().searchCustomer(selected.getCustomer());
-                    nameFieldForm.getSelectionModel().select(customer);
+                    nameFieldForm.setText(selected.getCustomer());
                     poFieldForm.setText(selected.getPo());
                     remarksFieldForm.setText(selected.getRemarks());
 
@@ -379,6 +382,7 @@ public class InvoiceController implements Initializable {
         InvoiceDAO dao = new InvoiceDAO();
         masterData.clear();
         masterData.addAll(dao.queryOrder(null));
+        generateCustomerNames();
     }
 
     private Invoice generateInvoice() {
@@ -386,17 +390,22 @@ public class InvoiceController implements Initializable {
 
         String invoiceNumber = invoiceFieldForm.getText();
         LocalDate date = dateFieldForm.getValue();
-        Customer customer = nameFieldForm.getValue();
+        String customer = nameFieldForm.getText();
         String amount = amountFieldForm.getText();
         String po = poFieldForm.getText();
         String remarks = remarksFieldForm.getText();
+
+        CustomerDAO dao = new CustomerDAO();
+        Customer existingCustomer = dao.searchCustomer(customer);
 
         boolean isOk = false;
         if ( invoiceNumber.length() < 5 ) {
             message.setText("Invalid invoice number");
         } else if ( date == null ) {
             message.setText("Invalid date");
-        } else if ( customer == null ) {
+        } else if ( customer.length() == 0 ) {
+            message.setText("Invalid customer");
+        } else if ( existingCustomer == null ) {
             message.setText("Invalid customer");
         } else if ( amount.length() == 0 ) {
             message.setText("Invalid amount");
@@ -407,7 +416,7 @@ public class InvoiceController implements Initializable {
         if ( isOk ) {
             invoice.setInvoice(Integer.parseInt(invoiceNumber));
             invoice.setDate(date);
-            invoice.setCustomer(customer.getName());
+            invoice.setCustomer(customer);
             invoice.setAmount(Double.parseDouble(amount));
             invoice.setPo(po);
             invoice.setRemarks(remarks);
@@ -423,145 +432,90 @@ public class InvoiceController implements Initializable {
         amountFieldForm.clear();
         poFieldForm.clear();
         remarksFieldForm.clear();
+        nameFieldForm.clear();
         btnOut.setDisable(true);
         btnCancel.setDisable(true);
         btnAdd.setText("Add");
     }
 
     public void onPrint(ActionEvent actionEvent) {
-        preparePrintable();
+        previewPrintable();
     }
 
-    private void preparePrintable() {
-        TableView<Invoice> printTable = generateTable();
-
-        PrinterJob job = PrinterJob.createPrinterJob();
-
-        Printer printer = Printer.getDefaultPrinter();
-        PageLayout pageLayout = printer.createPageLayout(Paper.NA_LETTER, PageOrientation.LANDSCAPE, Printer.MarginType.DEFAULT);
-
-        if ( job != null ) {
+    private void previewPrintable() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(Locator.LOCATION + "printing.fxml"));
+            Parent root = fxmlLoader.load();
             Stage stage = new Stage();
-            if ( job.showPrintDialog(stage) ) {
-                String jobName = "Viva Sales " +
-                        LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm a MMM dd, yyyy"));
-                job.getJobSettings().setJobName(jobName);
+            stage.getIcons().add(new Image("resources/img/vse.png"));
+            stage.setTitle("Print Preview");
+            root.getStylesheets().add("resources/invoice.css");
 
-                // 1. Create Header
-                BorderPane borderpane = generateHeader();
+            Printer printer = Printer.getDefaultPrinter();
+            PageLayout pageLayout = printer.createPageLayout(Paper.NA_LETTER, PageOrientation.PORTRAIT, Printer.MarginType.DEFAULT);
 
-                int from = 0;
-                int to = Math.min(18, masterData.size());
-                printTable.setItems(FXCollections.observableList(masterData.subList(from, to)));
-                borderpane.setCenter(printTable);
+            double width = pageLayout.getPrintableWidth();
+            double height = pageLayout.getPrintableHeight();
 
-                // 3. Print Border Pane
-                boolean success = job.printPage(pageLayout, borderpane);
+            stage.setScene(new Scene(root, height, width));
+            PrintingController printingController = fxmlLoader.getController();
+            printingController.setMasterData(masterData);
 
-                // 4. Print Successive Pages ( if there are any )
-                if ( masterData.size() > 18 ) {
-                    borderpane.setTop(null);
+            stage.show();
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+    }
 
-                    int printableRowsPerPage = 19; //18 first page, 27 the rest
-                    int pageCount = (masterData.size() - 18) / printableRowsPerPage + 1;
+    @FXML
+    public void onSearch(Event event) {
+        String invoiceSearched = invoiceFieldForm.getText();
 
-                    // 5. print successive pages
-                    int currentPage = 0;
-                    while ( currentPage < pageCount && success ) {
-                        int fromIndex = 18 + (currentPage * printableRowsPerPage);
-                        int toIndex = Math.min(fromIndex + printableRowsPerPage, masterData.size());
-                        printTable.setItems(FXCollections.observableList(masterData.subList(fromIndex, toIndex)));
-                        success = job.printPage(pageLayout, printTable);
-                        currentPage++;
-                    }
-                }
+        if ( invoiceSearched.length() > 0 ) {
+            Invoice selected = new InvoiceDAO().searchOrder(invoiceSearched);
+            if ( selected != null ) {
+                // color depending on status
+                evaluateInvoice(selected);
 
-                // 5. End Job
-                if ( success ) {
-                    job.endJob();
-                }
+                dateFieldForm.setValue(selected.getDate());
+                NumberFormat amountFormat = new DecimalFormat("#.00");
+                amountFieldForm.setText(amountFormat.format(selected.getAmount()));
+                nameFieldForm.setText(selected.getCustomer());
+                poFieldForm.setText(selected.getPo());
+                remarksFieldForm.setText(selected.getRemarks());
+
+                btnAdd.setText("Update");
+                btnOut.setDisable(false);
+                btnCancel.setDisable(false);
+            } else {
+                dateFieldForm.setValue(null);
+                amountFieldForm.setText("");
+                nameFieldForm.setText("");
+                poFieldForm.setText("");
+                remarksFieldForm.setText("");
+                colorFieldForm("black");
+            }
+        }
+    }
+
+    private void evaluateInvoice(Invoice selected) {
+        if ( selected.isPaidProperty() != null ) {
+            if ( selected.isPaid() ) {
+                colorFieldForm("#cc3300;");
+            } else if ( !selected.isPaid() ) {
+                colorFieldForm("black");
             }
         }
 
-    }
-
-    private String computeTotal() {
-        BigDecimal bigDecimal = new BigDecimal(0.0);
-        for ( Invoice item : masterData ) {
-            bigDecimal = bigDecimal.add(new BigDecimal(item.getAmount()));
+        if ( selected.isCancelled() ) {
+            colorFieldForm("#3300CC;");
         }
-        NumberFormat df = DecimalFormat.getInstance();
-        df.setMinimumFractionDigits(2);
-        df.setMaximumFractionDigits(2);
-        String total = df.format(bigDecimal.doubleValue());
-        return total;
     }
 
-    private BorderPane generateHeader() {
-        VBox vbox = new VBox();
-        Label total = new Label("Total: " + computeTotal());
-        total.setStyle("-fx-font-weight: bold");
-        Label headerBlank4 = new Label("");
-        vbox.getChildren().addAll( total, headerBlank4);
-
-        BorderPane borderpane = new BorderPane();
-        // 2. Setup Border Pane
-        borderpane.setTop(vbox);
-        return borderpane;
-    }
-
-    private TableView generateTable() {
-        Printer printer = Printer.getDefaultPrinter(); //get the default printer
-        PageLayout pageLayout = printer.createPageLayout(Paper.NA_LETTER, PageOrientation.LANDSCAPE, Printer.MarginType.DEFAULT);
-
-        TableView<Invoice> printTable = new TableView<>();
-        TableColumn<Invoice, LocalDate> printDate = new TableColumn<>("Date");
-        TableColumn<Invoice, Number> printInvoice = new TableColumn<>("Invoice No.");
-        TableColumn<Invoice, String> printCustomer = new TableColumn<>("Customer");
-        TableColumn<Invoice, String> printPO = new TableColumn<>("PO No.");
-        TableColumn<Invoice, Number> printAmount = new TableColumn<>("Amount");
-
-        printDate.setCellValueFactory(param -> param.getValue().dateProperty());
-        printInvoice.setCellValueFactory(param -> param.getValue().invoiceProperty());
-        printCustomer.setCellValueFactory(param -> param.getValue().customerProperty());
-        printPO.setCellValueFactory(param -> param.getValue().poProperty());
-        printAmount.setCellValueFactory(param -> param.getValue().amountProperty());
-
-        printDate.getStyleClass().add("text-align");
-        printInvoice.getStyleClass().add("number-align");
-        printInvoice.setId("money");
-        printPO.getStyleClass().add("text-align");
-        printCustomer.getStyleClass().add("text-align");
-        printAmount.setId("money");
-        printAmount.getStyleClass().add("number-align");
-        printTable.setId("printing");
-        printTable.getStylesheets().add("resources/printing.css");
-
-        printDate.setCellFactory(column -> new DateTableCell());
-        printAmount.setCellFactory(BalanceAmountTableCell::new);
-
-        printTable.getColumns().add(printDate);
-        printTable.getColumns().add(printInvoice);
-        printTable.getColumns().add(printCustomer);
-        printTable.getColumns().add(printPO);
-        printTable.getColumns().add(printAmount);
-
-        printTable.setPrefWidth(pageLayout.getPrintableWidth());
-        printTable.setPrefHeight(pageLayout.getPrintableHeight());
-
-        printDate.setPrefWidth(80);
-        printInvoice.setPrefWidth(80);
-        printCustomer.setPrefWidth(300);
-        printPO.setPrefWidth(125);
-        printAmount.prefWidthProperty().bind(
-                printTable.widthProperty()
-                        .subtract(printDate.widthProperty())
-                        .subtract(printInvoice.widthProperty())
-                        .subtract(printCustomer.widthProperty())
-                        .subtract(printPO.widthProperty())
-                        .subtract(2)  // a border stroke?
-        );
-
-        return printTable;
+    private void colorFieldForm(String hexColor) {
+        invoiceFieldForm.setStyle("-fx-text-fill: " + hexColor);
+        amountFieldForm.setStyle("-fx-text-fill: " + hexColor);
+        remarksFieldForm.setStyle("-fx-text-fill: " + hexColor);
+        poFieldForm.setStyle("-fx-text-fill: " + hexColor);
     }
 }

@@ -33,14 +33,14 @@ public class WelcomeController implements Initializable {
     @FXML
     public void showCustomers(ActionEvent actionEvent) throws IOException {
         AnchorPane entriesPane = FXMLLoader.load(getClass().getResource(Locator.LOCATION + "customers.fxml"));
-        entriesPane.getStylesheets().add("resources/balance.css");
+        entriesPane.getStylesheets().add("resources/invoice.css");
         content.setCenter(entriesPane);
     }
 
     @FXML
     public void showStatements(ActionEvent actionEvent) throws IOException {
         Pane entriesPane = FXMLLoader.load(getClass().getResource(Locator.LOCATION + "balance.fxml"));
-        entriesPane.getStylesheets().add("resources/balance.css");
+        entriesPane.getStylesheets().add("resources/invoice.css");
         content.setCenter(entriesPane);
     }
 }

@@ -1,6 +1,9 @@
 package controller;
 
-import com.jfoenix.controls.*;
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXDatePicker;
+import com.jfoenix.controls.JFXRadioButton;
+import com.jfoenix.controls.JFXTextField;
 import db.CustomerDAO;
 import db.InvoiceDAO;
 import javafx.collections.FXCollections;
@@ -9,27 +12,33 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.print.*;
+import javafx.print.PageLayout;
+import javafx.print.PageOrientation;
+import javafx.print.Paper;
+import javafx.print.Printer;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Customer;
 import model.FilterBag;
 import model.Invoice;
 import utility.*;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 /**
  * Created by Goodwin Chua on 8 Sep 2016.
@@ -40,7 +49,7 @@ public class BalanceController implements Initializable {
     @FXML
     public JFXTextField invoiceFilterTo;
     @FXML
-    public JFXComboBox<Customer> nameFilter;
+    public AutoCompleteTextField nameFilter;
     @FXML
     public JFXDatePicker dateFilterFrom;
     @FXML
@@ -76,6 +85,7 @@ public class BalanceController implements Initializable {
     private final static int rowsPerPage = 1000;
     private ObservableList<Invoice> masterData = FXCollections.observableArrayList();
     private ToggleGroup group;
+    private double balance = 0.0;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -89,7 +99,7 @@ public class BalanceController implements Initializable {
         invoiceFilterTo.clear();
         dateFilterFrom.setValue(null);
         dateFilterTo.setValue(null);
-        nameFilter.getSelectionModel().selectLast();
+        nameFilter.clear();
         radioAll.setSelected(true);
     }
 
@@ -99,7 +109,7 @@ public class BalanceController implements Initializable {
         String invoiceTo = invoiceFilterTo.getText();
         LocalDate dateFrom = dateFilterFrom.getValue();
         LocalDate dateTo = dateFilterTo.getValue();
-        String name = nameFilter.getValue().getName();
+        String name = nameFilter.getText();
 
         RadioButton isSelected = (RadioButton) group.getSelectedToggle();
         String filterMode = isSelected.getText();
@@ -128,7 +138,13 @@ public class BalanceController implements Initializable {
         masterData.addAll(dao.queryOrder(filterBag));
 
         refreshTable();
-        computeTotal(filterMode);
+        balance = computeTotal(filterMode);
+
+        NumberFormat df = DecimalFormat.getInstance();
+        df.setMinimumFractionDigits(2);
+        df.setMaximumFractionDigits(2);
+        String formatted = df.format(balance);
+        totalLabel.setText(formatted);
     }
 
     private void initializeColumns() {
@@ -137,26 +153,19 @@ public class BalanceController implements Initializable {
         poColumn.setCellValueFactory(param -> param.getValue().poProperty());
         amountColumn.setCellValueFactory(param -> param.getValue().amountProperty());
 
-        amountColumn.prefWidthProperty().bind(
-                balanceTable.widthProperty()
-                        .subtract(dateColumn.widthProperty())
-                        .subtract(invoiceColumn.widthProperty())
-                        .subtract(poColumn.widthProperty())
-                        .subtract(2)  // a border stroke?
-        );
-
         dateColumn.getStyleClass().add("text-align");
-        invoiceColumn.getStyleClass().add("number-align");
-        invoiceColumn.setId("money");
+        invoiceColumn.getStyleClass().add("invoice-align");
+        invoiceColumn.setId("invoice");
         poColumn.getStyleClass().add("text-align");
         amountColumn.getStyleClass().add("number-align");
         amountColumn.setId("money");
 
         dateColumn.setCellFactory(column -> new DateTableCell());
         poColumn.setCellFactory(column -> new ToolTipTableCell());
+        amountColumn.setCellFactory(column -> new AmountTableCell());
 
-        amountColumn.setCellFactory(BalanceAmountTableCell::new);
-
+        balanceTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        balanceTable.setRowFactory(tv -> new InvoiceTableRow());
     }
 
     private void initializeFilter() {
@@ -169,12 +178,12 @@ public class BalanceController implements Initializable {
         invoiceFilterFrom.textProperty().addListener(new InvoiceChangeListener(invoiceFilterFrom));
         invoiceFilterTo.textProperty().addListener(new InvoiceChangeListener(invoiceFilterTo));
 
-        nameFilter.setConverter(new CustomerStringConverter());
         ArrayList<Customer> customers = new CustomerDAO().queryCustomers();
-        customers.add(new Customer("None", "", ""));
-        nameFilter.setItems(FXCollections.observableArrayList(customers));
-        nameFilter.setStyle("-fx-font: 12px Calibri; -fx-padding: 5 11 5 10");
-        nameFilter.getSelectionModel().selectLast();
+        ArrayList<String> customerNames = new ArrayList<>();
+        customerNames.addAll(customers.stream().map(Customer::getName).collect(Collectors.toList()));
+
+        nameFilter.setStyle("-fx-font: 11px Arial;");
+        nameFilter.getEntries().addAll(customerNames);
     }
 
     private Node createPage(int pageIndex) {
@@ -207,7 +216,7 @@ public class BalanceController implements Initializable {
         content.setCenter(pagination);
     }
 
-    private void computeTotal(String filterMode) {
+    private Double computeTotal(String filterMode) {
         BigDecimal bigDecimal = new BigDecimal(0.0);
         for ( Invoice item : masterData ) {
             switch ( filterMode ) {
@@ -222,147 +231,73 @@ public class BalanceController implements Initializable {
                     break;
             }
         }
-        NumberFormat df = DecimalFormat.getInstance();
-        df.setMinimumFractionDigits(2);
-        df.setMaximumFractionDigits(2);
-        String total = df.format(bigDecimal.doubleValue());
-        totalLabel.setText(total);
-    }
-
-    private void preparePrintable() {
-        TableView<Invoice> printTable = generateTable();
-        PrinterJob job = PrinterJob.createPrinterJob();
-
-        Printer printer = Printer.getDefaultPrinter();
-        PageLayout pageLayout = printer.createPageLayout(Paper.NA_LETTER, PageOrientation.PORTRAIT, Printer.MarginType.DEFAULT);
-
-        if ( job != null ) {
-            Stage stage = new Stage();
-            if ( job.showPrintDialog(stage) ) {
-                String jobName = "Viva Sales " +
-                        LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm a MMM dd, yyyy"));
-                job.getJobSettings().setJobName(jobName);
-
-                // 1. Create Header
-                BorderPane borderpane = generateHeader();
-
-                int from = 0;
-                int to = Math.min(18, masterData.size());
-                printTable.setItems(FXCollections.observableList(masterData.subList(from, to)));
-                borderpane.setCenter(printTable);
-
-                // 3. Print Border Pane
-                boolean success = job.printPage(pageLayout, borderpane);
-
-                // 4. Print Successive Pages ( if there are any )
-                if ( masterData.size() > 18 ) {
-                    borderpane.setTop(null);
-
-                    int printableRowsPerPage = 27; //18 first page, 27 the rest
-                    int pageCount = (masterData.size() - 18) / printableRowsPerPage + 1;
-
-                    // 5. print successive pages
-                    int currentPage = 0;
-                    while ( currentPage < pageCount && success ) {
-                        int fromIndex = 18 + (currentPage * printableRowsPerPage);
-                        int toIndex = Math.min(fromIndex + printableRowsPerPage, masterData.size());
-                        printTable.setItems(FXCollections.observableList(masterData.subList(fromIndex, toIndex)));
-                        success = job.printPage(pageLayout, printTable);
-                        currentPage++;
-                    }
-                }
-
-                // 5. End Job
-                if ( success ) {
-                    job.endJob();
-                }
-            }
-        }
-
-    }
-
-    private BorderPane generateHeader() {
-        Customer customer = nameFilter.getValue();
-
-        BorderPane borderpane = new BorderPane();
-        VBox vbox = new VBox();
-        Label headerSpacing0 = new Label("");
-        Label headerSpacing1 = new Label("");
-        Label headerSpacing2 = new Label("");
-        Label headerSpacing3 = new Label("");
-        Label headerSpacing4 = new Label("");
-        Label headerSpacing5 = new Label("");
-        Label headerDate = new Label(LocalDate.now().format(DateTimeFormatter.ofPattern("MMM d, yyyy")));
-        Label headerBlank = new Label("");
-        Label headerCustomerName = new Label(customer.getName());
-        Label headerTelephone = new Label("Telephone No.: " + customer.getTel());
-        Label headerAddress = new Label("Address: " + customer.getAddress());
-        Label headerBlank2 = new Label("");
-        Label title = new Label("Statement of Account");
-        Label headerBlank3 = new Label("");
-        Label total = new Label("Total: " + totalLabel.getText());
-        total.setStyle("-fx-font-weight: bold");
-        Label headerBlank4 = new Label("");
-        vbox.getChildren().addAll(headerSpacing0, headerSpacing1, headerSpacing2, headerSpacing3, headerSpacing4, headerSpacing5);
-        vbox.getChildren().addAll(headerDate, headerBlank, headerCustomerName, headerTelephone, headerAddress, headerBlank2);
-        vbox.getChildren().addAll(title, headerBlank3, total, headerBlank4);
-        vbox.getStylesheets().add("resources/balance.css");
-
-        // 2. Setup Border Pane
-        borderpane.setTop(vbox);
-        return borderpane;
-    }
-
-    private TableView generateTable() {
-        Printer printer = Printer.getDefaultPrinter(); //get the default printer
-        PageLayout pageLayout = printer.createPageLayout(Paper.NA_LETTER, PageOrientation.PORTRAIT, Printer.MarginType.DEFAULT);
-
-        TableView<Invoice> printTable = new TableView<>();
-        TableColumn<Invoice, LocalDate> printDate = new TableColumn<>("Date");
-        TableColumn<Invoice, Number> printInvoice = new TableColumn<>("Invoice No.");
-        TableColumn<Invoice, String> printPO = new TableColumn<>("PO No.");
-        TableColumn<Invoice, Number> printAmount = new TableColumn<>("Amount");
-
-        printDate.setCellValueFactory(param -> param.getValue().dateProperty());
-        printInvoice.setCellValueFactory(param -> param.getValue().invoiceProperty());
-        printPO.setCellValueFactory(param -> param.getValue().poProperty());
-        printAmount.setCellValueFactory(param -> param.getValue().amountProperty());
-
-        printDate.getStyleClass().add("text-align");
-        printInvoice.getStyleClass().add("number-align");
-        printInvoice.setId("money");
-        printPO.getStyleClass().add("text-align");
-        printAmount.setId("money");
-        printAmount.getStyleClass().add("number-align");
-        printTable.setId("printing");
-        printTable.getStylesheets().add("resources/printing.css");
-
-        printDate.setCellFactory(column -> new DateTableCell());
-        printAmount.setCellFactory(BalanceAmountTableCell::new);
-
-        printTable.getColumns().add(printDate);
-        printTable.getColumns().add(printInvoice);
-        printTable.getColumns().add(printPO);
-        printTable.getColumns().add(printAmount);
-
-        printTable.setPrefWidth(pageLayout.getPrintableWidth());
-        printTable.setPrefHeight(pageLayout.getPrintableHeight());
-
-        printDate.setPrefWidth(80);
-        printInvoice.setPrefWidth(110);
-        printPO.setPrefWidth(160);
-        printAmount.prefWidthProperty().bind(
-                printTable.widthProperty()
-                        .subtract(printDate.widthProperty())
-                        .subtract(printInvoice.widthProperty())
-                        .subtract(printPO.widthProperty())
-                        .subtract(2)  // a border stroke?
-        );
-
-        return printTable;
+        return bigDecimal.doubleValue();
     }
 
     public void onPrint(ActionEvent actionEvent) {
-        preparePrintable();
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(Locator.LOCATION + "printingstatement.fxml"));
+            Parent root = fxmlLoader.load();
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image("resources/img/vse.png"));
+            stage.setTitle("Print Preview");
+            root.getStylesheets().add("resources/invoice.css");
+
+            Printer printer = Printer.getDefaultPrinter();
+            PageLayout pageLayout = printer.createPageLayout(Paper.NA_LETTER, PageOrientation.PORTRAIT, Printer.MarginType.DEFAULT);
+
+            double width = pageLayout.getPrintableWidth();
+            double height = pageLayout.getPrintableHeight();
+
+            stage.setScene(new Scene(root, width, height));
+            PrintingStatementController printingController = fxmlLoader.getController();
+            printingController.setMasterData(masterData, balance, nameFilter.getText());
+
+            stage.show();
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+    }
+
+    public void onPrintAllUnpaid(ActionEvent actionEvent) {
+        ArrayList<Customer> unpaidCustomers = new CustomerDAO().queryCustomers();
+        for( Customer customer : unpaidCustomers ) {
+            FilterBag filterBag = new FilterBag();
+            filterBag.setFilterMode("Not Paid");
+            filterBag.setCustomer(customer.getName());
+            ArrayList<Invoice> unpaidOrders = new InvoiceDAO().queryOrder(filterBag);
+            if ( !unpaidOrders.isEmpty() ) {
+                ObservableList<Invoice> unpaidObservable = FXCollections.observableArrayList();
+                unpaidObservable.addAll(unpaidOrders);
+
+                BigDecimal bigDecimal = new BigDecimal(0.0);
+                for ( Invoice item : unpaidObservable ) {
+                    bigDecimal = bigDecimal.add(new BigDecimal(item.getAmount()));
+                }
+
+                FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(Locator.LOCATION + "printingstatement.fxml"));
+                Parent root = null;
+                try {
+                    root = fxmlLoader.load();
+                } catch ( IOException e ) {
+                    e.printStackTrace();
+                }
+                Stage stage = new Stage();
+                stage.getIcons().add(new Image("resources/img/vse.png"));
+                stage.setTitle("Print Preview");
+                root.getStylesheets().add("resources/invoice.css");
+                Printer printer = Printer.getDefaultPrinter();
+                PageLayout pageLayout = printer.createPageLayout(Paper.NA_LETTER, PageOrientation.PORTRAIT, Printer.MarginType.DEFAULT);
+
+                double width = pageLayout.getPrintableWidth();
+                double height = pageLayout.getPrintableHeight();
+
+                stage.setScene(new Scene(root, width, height));
+                PrintingStatementController printingController = fxmlLoader.getController();
+                printingController.setMasterData(unpaidObservable, bigDecimal.doubleValue(), customer.getName());
+                printingController.onPrint(null);
+            }
+        }
+
     }
 }
